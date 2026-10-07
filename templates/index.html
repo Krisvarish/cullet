@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cullet: Physical Material Inspection &amp; Municipal Sorting</title>
+<meta name="description" content="A tactile optical inspection station and municipal solid waste classifier powered by MobileNetV2. Identifies physical materials and routes discards into four municipal recovery streams.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2.2">
+</head>
+<body class="editorial-body">
+
+<!-- AMBIENT INTERACTIVE TACTILE DOT GRID -->
+<canvas id="ambientGridCanvas" class="ambient-grid-canvas" aria-hidden="true"></canvas>
+<header class="masthead" role="banner">
+  <div class="masthead-inner">
+    <div class="masthead-brand-block">
+      <a href="#intro" class="masthead-brand" aria-label="Cullet Index">
+        <span class="brand-title">CULLET</span>
+        <span class="brand-sub">MUNICIPAL SOLID WASTE VISION</span>
+      </a>
+    </div>
+
+    <div class="masthead-dispatch">
+      <span class="dispatch-title">OPTICAL MATERIAL INSPECTION PLATEN</span>
+    </div>
+
+    <nav class="masthead-index" role="navigation" aria-label="Primary Navigation">
+      <a href="#workbench-station" class="index-anchor active" data-nav="workbench">
+        <span class="anchor-num">01</span>
+        <span class="anchor-label">Platen</span>
+      </a>
+      <a href="#streams-catalogue" class="index-anchor" data-nav="streams">
+        <span class="anchor-num">02</span>
+        <span class="anchor-label">Streams</span>
+      </a>
+      <a href="#specimens-library" class="index-anchor" data-nav="library">
+        <span class="anchor-num">03</span>
+        <span class="anchor-label">Materials</span>
+      </a>
+      <a href="#session-ledger" class="index-anchor" data-nav="ledger">
+        <span class="anchor-num">04</span>
+        <span class="anchor-label">Ledger <span class="ledger-pill" id="navHistoryCount">0</span></span>
+      </a>
+      <a href="#system-manual" class="index-anchor" data-nav="manual">
+        <span class="anchor-num">05</span>
+        <span class="anchor-label">System</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="page-canvas">
+
+  <!-- =========================================================================
+       01. THE OPENING MANIFESTO & FOLIO PROLOGUE
+       ========================================================================= -->
+  <section class="folio-prologue" id="intro" aria-label="Editorial introduction">
+    <div class="prologue-meta-line">
+      <span class="folio-tag">MUNICIPAL SOLID WASTE VISION</span>
+      <span class="folio-rule" aria-hidden="true"></span>
+      <span class="folio-coord">12 MATERIALS &middot; 4 RECOVERY STREAMS</span>
+      <span class="folio-rule" aria-hidden="true"></span>
+      <span class="folio-tag">SUB-150MS EDGE FORWARD PASS</span>
+    </div>
+
+    <div class="prologue-hero-grid">
+      <div class="prologue-headline-wrap">
+        <h1 class="prologue-title">
+          Everything we throw away <span class="editorial-em">goes somewhere.</span>
+        </h1>
+        <p class="prologue-standfirst">
+          Municipal sorting fails the moment material substance is misjudged. Cullet operates as a physical optical sorting table: mount any discarded object before the lens to discern whether it is cellulose, alloy, polymer, glass, or biological matter, then route it to its exact municipal recovery destination.
+        </p>
+      </div>
+
+      <div class="prologue-aside-ledger">
+        <div class="tally-box">
+          <div class="tally-item">
+            <span class="tally-val">12</span>
+            <span class="tally-name">Discrete Physical Materials</span>
+            <span class="tally-note">From lithium cells to clear cullet</span>
+          </div>
+          <div class="tally-item">
+            <span class="tally-val">04</span>
+            <span class="tally-name">Municipal Destination Streams</span>
+            <span class="tally-note">Compost &middot; Recyclable &middot; Hazardous &middot; Landfill</span>
+          </div>
+          <div class="tally-item">
+            <span class="tally-val">89.6<span class="tally-unit">%</span></span>
+            <span class="tally-name">Empirical Validation Benchmark</span>
+            <span class="tally-note">Evaluated on held-out test split</span>
+          </div>
+        </div>
+
+        <div class="prologue-stamp-card">
+          <div class="stamp-header">
+            <span class="stamp-dot" aria-hidden="true">&sect;</span>
+            <span class="stamp-kicker">DISPOSAL PRINCIPLE</span>
+          </div>
+          <p class="stamp-body">
+            &ldquo;Waste is simply raw material in the wrong vessel. Precise sorting preserves the circular metabolism of human settlements.&rdquo;
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       02. THE PHYSICAL INSPECTION STATION & REVEAL (THE WORKBENCH)
+       ========================================================================= -->
+  <section class="workbench-section" id="workbench-station" aria-label="Physical specimen inspection table">
+    
+    <div class="section-badge-bar">
+      <span class="badge-num">SECTION 01</span>
+      <span class="badge-title">MATERIAL INSPECTION PLATEN &amp; SPECIMEN REVEAL</span>
+      <span class="badge-status" id="scannerBadge">PLATEN VACANT</span>
+    </div>
+
+    <!-- ERROR REJECTION SLIP -->
+    <div class="intake-error-slip" id="errorBanner" hidden role="alert">
+      <div class="slip-header">
+        <span class="slip-flag">&times; REJECTED INTAKE ENTRY</span>
+        <button class="slip-dismiss" id="dismissErrorBtn" aria-label="Dismiss intake warning">&times;</button>
+      </div>
+      <p class="slip-text" id="errorMessage">Optical sensor could not parse image. Please mount a valid photograph.</p>
+    </div>
+
+    <div class="inspection-table-grid">
+
+      <!-- LEFT: THE SPECIMEN PLATEN -->
+      <div class="platen-module" id="platenContainer">
+        <div class="platen-header">
+          <div class="platen-title-wrap">
+            <h2 class="platen-title">Optical Intake Platen</h2>
+            <span class="platen-caption">Mount photographic specimen for spectral evaluation</span>
+          </div>
+          <span class="platen-ref">INDEX &middot; REF-224</span>
+        </div>
+
+        <!-- PHYSICAL DROP AREA -->
+        <div class="specimen-bed" id="dropzone" tabindex="0" role="region" aria-label="Drop specimen photo or select file">
+          
+          <!-- Millimeter Calibration Marks -->
+          <div class="ruler-edge ruler-top" aria-hidden="true">
+            <span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span><span>120</span>
+          </div>
+          <div class="ruler-edge ruler-left" aria-hidden="true">
+            <span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span>
+          </div>
+
+          <!-- Archival Registration Marks & Specimen Pins -->
+          <span class="pin pin-tl" aria-hidden="true"></span>
+          <span class="pin pin-tr" aria-hidden="true"></span>
+          <span class="pin pin-bl" aria-hidden="true"></span>
+          <span class="pin pin-br" aria-hidden="true"></span>
+          
+          <div class="archival-cross" aria-hidden="true">
+            <span class="cross-h"></span>
+            <span class="cross-v"></span>
+          </div>
+
+          <!-- VACANT STATE -->
+          <div class="bed-vacant" id="scannerEmpty">
+            <div class="platen-emblem" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 7v10"/>
+                <path d="M7 12h10"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+            <p class="bed-prompt-primary">Place physical discard here</p>
+            <p class="bed-prompt-secondary">Drag photographic specimen onto platen or select using buttons below</p>
+            <span class="bed-format-note">JPEG &middot; PNG &middot; WEBP &middot; Up to 16 MB</span>
+          </div>
+
+          <!-- MOUNTED IMAGE PREVIEW -->
+          <img id="preview" alt="Mounted waste specimen" hidden>
+
+          <!-- OPTICAL EXPOSURE SWEEP -->
+          <div class="exposure-line" id="scanLaser" hidden aria-hidden="true"></div>
+
+          <!-- EXPOSURE OVERLAY -->
+          <div class="exposure-veil" id="scanningOverlay" hidden aria-live="polite">
+            <div class="exposure-spinner" aria-hidden="true"></div>
+            <span class="exposure-tag">EXPOSING SPECIMEN</span>
+            <p class="exposure-sub">Evaluating inverted residual MobileNetV2 feature tensors</p>
+          </div>
+        </div>
+
+        <!-- PLATEN CONTROLS -->
+        <div class="platen-actions">
+          <label class="tactile-btn btn-primary" id="uploadLabel">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span>Mount Photo File</span>
+            <input type="file" id="fileInput" accept="image/*" hidden aria-label="Mount photo from device">
+          </label>
+
+          <label class="tactile-btn btn-secondary" id="cameraLabel">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+            <span>Optical Camera</span>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden aria-label="Capture with device camera">
+          </label>
+
+          <button class="tactile-btn btn-ghost" id="clearBtn" hidden aria-label="Clear platen surface">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <span>Clear Platen</span>
+          </button>
+        </div>
+
+        <div class="platen-colophon-foot">
+          <span>&bull; Local TensorFlow Inference</span>
+          <span>100% Private Processing</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: THE SPECIMEN CLASSIFICATION SHEET (REVEAL) -->
+      <div class="specimen-sheet-module" id="resultCard" role="region" aria-label="Specimen sorting directive">
+        
+        <!-- SHEET MASTHEAD -->
+        <div class="sheet-masthead">
+          <div class="sheet-serial-lockup">
+            <span class="sheet-kicker">SPECIMEN RECORD</span>
+            <span class="sheet-serial" id="ticketSerial">#00000</span>
+          </div>
+          <div class="sheet-stamp-lockup">
+            <span class="sheet-time" id="scanTimestamp">&mdash;</span>
+            <span class="sheet-status-tag">INTAKE LOG</span>
+          </div>
+        </div>
+
+        <!-- 1. VACANT IDLE SHEET -->
+        <div class="sheet-idle-state" id="ticketIdle">
+          <div class="idle-seal" aria-hidden="true">
+            <span class="seal-ring"></span>
+            <span class="seal-core">&bull;</span>
+          </div>
+          <h3 class="idle-headline">Awaiting Specimen on Platen</h3>
+          <p class="idle-paragraph">
+            Mount a physical item onto the optical inspection bed to the left. The neural vision network will isolate its material properties, aggregate stream confidence, and generate a definitive municipal sorting directive.
+          </p>
+          <div class="idle-streams-diagram" aria-hidden="true">
+            <div class="stream-route route-bio"><span>I</span> Biodegradable</div>
+            <div class="stream-route route-rec"><span>II</span> Recyclable</div>
+            <div class="stream-route route-haz"><span>III</span> Hazardous</div>
+            <div class="stream-route route-non"><span>IV</span> Non-Biodegradable</div>
+          </div>
+        </div>
+
+        <!-- 2. QUARANTINE / LOW CONFIDENCE STATE -->
+        <div class="sheet-uncertain-state" id="ticketUncertain" hidden role="alert">
+          <div class="quarantine-badge">
+            <span class="badge-icon">&Delta;</span>
+            <span>SPECIMEN QUARANTINE &middot; LOW OPTICAL FIDELITY</span>
+          </div>
+          <h3 class="uncertain-head">Visual Confidence Below Minimum Threshold</h3>
+          <p class="uncertain-body">
+            The neural feature extractor could not achieve decisive confidence on this exposure. Try centering the item, improving ambient light, or isolating it against an uncluttered backdrop.
+          </p>
+          <div class="uncertain-tentative-box" id="uncertainFallback">
+            <span class="tentative-label">TENTATIVE READING (UNCONFIRMED)</span>
+            <div class="tentative-row">
+              <span class="tentative-name" id="uncertainMaterial">&mdash;</span>
+              <span class="tentative-score" id="uncertainConfidence">&mdash;</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. VERIFIED CLASSIFICATION DIRECTIVE (CONFIRMED REVEAL) -->
+        <div class="sheet-confirmed-body" id="ticketBody" hidden>
+
+          <!-- STREAM REVEAL BANNER -->
+          <div class="stream-reveal-card" id="categoryHero">
+            <div class="reveal-top-line">
+              <span class="reveal-conduit-tag">MUNICIPAL SORTING CONDUIT</span>
+              <span class="reveal-score-badge" id="categoryConfidenceScore">0.0% Aggregate Confidence</span>
+            </div>
+
+            <div class="reveal-hero-line">
+              <div class="reveal-icon-frame" id="categoryIconFrame" aria-hidden="true">
+                <!-- SVG dynamically injected by JS -->
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" id="categorySvg">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="reveal-titles">
+                <span class="reveal-pretitle">ROUTE SPECIMEN TO:</span>
+                <h3 class="reveal-category-name" id="itemName">&mdash;</h3>
+              </div>
+            </div>
+
+            <!-- TACTILE CONFIDENCE LITHOGRAPH METER -->
+            <div class="lithograph-meter-wrap">
+              <div class="lithograph-track">
+                <div class="lithograph-fill" id="categoryMeterFill" style="width: 0%;"></div>
+              </div>
+              <div class="lithograph-meta">
+                <span>0% CERTAINTY</span>
+                <span>AGGREGATE PROBABILITY</span>
+                <span>100% MAXIMUM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TWO-UP PHYSICAL CARDS (DESTINATION & MATERIAL) -->
+          <div class="specimen-two-up">
+            
+            <!-- PHYSICAL DESTINATION VESSEL -->
+            <div class="field-card bin-field-card">
+              <div class="card-tag">PHYSICAL RECEPTACLE</div>
+              <div class="card-content-lockup">
+                <span class="swatch-wax-seal" id="binSwatch" aria-hidden="true"></span>
+                <span class="card-headline-val" id="binName">&mdash;</span>
+              </div>
+              <span class="card-annotation">Prescribed municipal destination vessel</span>
+            </div>
+
+            <!-- MATERIAL SUBSTANCE IDENTIFIED -->
+            <div class="field-card material-field-card">
+              <div class="card-tag">MATERIAL SUBSTANCE</div>
+              <div class="card-content-lockup">
+                <span class="card-headline-val" id="itemMaterial">&mdash;</span>
+              </div>
+              <span class="card-annotation" id="materialConfidenceBadge">0.0% material confidence</span>
+            </div>
+
+          </div>
+
+          <!-- HANDLING DIRECTIVE (WHAT TO DO) -->
+          <div class="handling-directive-card">
+            <div class="directive-kicker">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <span>FIELD HANDLING PROTOCOL</span>
+            </div>
+            <p class="directive-text" id="tipText">&mdash;</p>
+          </div>
+
+          <!-- SPECTROMETRIC CANDIDATES LIST (TOP 3) -->
+          <div class="candidates-ledger-card">
+            <div class="candidates-banner">
+              <span class="cand-heading">Spectral Candidate Readings</span>
+              <span class="cand-sub">Neural softmax rank &middot; Top 3 candidates</span>
+            </div>
+            <div class="candidates-slip-list" id="altList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       03. THE FOUR MUNICIPAL STREAMS (PHYSICAL CONDUITS / ARCHIVAL SPREAD)
+       ========================================================================= -->
+  <section class="streams-catalogue-section" id="streams-catalogue" aria-label="The four municipal sorting streams">
+    <div class="section-badge-bar">
+      <span class="badge-num">SECTION 02</span>
+      <span class="badge-title">THE FOUR MUNICIPAL RECOVERY STREAMS</span>
+      <span class="badge-status">FOUR SYSTEM ARTERIES</span>
+    </div>
+
+    <div class="catalogue-intro-grid">
+      <h2 class="catalogue-headline">
+        Every material flows into one of four physical conduits.
+      </h2>
+      <p class="catalogue-lead">
+        Municipal solid waste infrastructure cannot function as a monolithic drop. Material purity determines whether discards are composted into loam, remelted into pure cullet, safely neutralized, or sequestered in controlled landfill.
+      </p>
+    </div>
+
+    <div class="stream-columns-quad">
+
+      <!-- CONDUIT I: BIODEGRADABLE -->
+      <article class="conduit-column conduit-bio">
+        <div class="conduit-top-line">
+          <span class="conduit-roman">STREAM I</span>
+          <span class="conduit-dot" aria-hidden="true"></span>
+        </div>
+        <h3 class="conduit-title">Biodegradable</h3>
+        <span class="conduit-bin-badge">Compost / Wet Waste</span>
+        <p class="conduit-desc">
+          Organic food scraps, garden foliage, soiled non-waxed paper, and untreated corrugated cardboard capable of natural anaerobic or aerobic microbial decomposition into nutrient loam.
+        </p>
+        <div class="conduit-materials-list">
+          <span class="material-chip">Biological</span>
+          <span class="material-chip">Paper</span>
+          <span class="material-chip">Cardboard</span>
+        </div>
+        <div class="conduit-session-tally">
+          <span class="tally-label">Session Count</span>
+          <span class="tally-count" id="streamCountBio">0</span>
+        </div>
+      </article>
+
+      <!-- CONDUIT II: RECYCLABLE -->
+      <article class="conduit-column conduit-rec">
+        <div class="conduit-top-line">
+          <span class="conduit-roman">STREAM II</span>
+          <span class="conduit-dot" aria-hidden="true"></span>
+        </div>
+        <h3 class="conduit-title">Recyclable</h3>
+        <span class="conduit-bin-badge">Dry / Recyclable Recovery</span>
+        <p class="conduit-desc">
+          Clean structural materials suited for industrial remelting, repulping, or secondary polymer compounding. Requires rinse of biological residue to prevent contaminated batch rejections.
+        </p>
+        <div class="conduit-materials-list">
+          <span class="material-chip">Metal</span>
+          <span class="material-chip">Plastic</span>
+          <span class="material-chip">Brown Glass</span>
+          <span class="material-chip">Green Glass</span>
+          <span class="material-chip">White Glass</span>
+        </div>
+        <div class="conduit-session-tally">
+          <span class="tally-label">Session Count</span>
+          <span class="tally-count" id="streamCountRec">0</span>
+        </div>
+      </article>
+
+      <!-- CONDUIT III: HAZARDOUS -->
+      <article class="conduit-column conduit-haz">
+        <div class="conduit-top-line">
+          <span class="conduit-roman">STREAM III</span>
+          <span class="conduit-dot" aria-hidden="true"></span>
+        </div>
+        <h3 class="conduit-title">Hazardous</h3>
+        <span class="conduit-bin-badge">Hazardous Drop-off Center</span>
+        <p class="conduit-desc">
+          Articles containing heavy metals, reactive chemical electrolytes, or fire hazards. Never placed in domestic collection bins; requires designated regional containment facilities.
+        </p>
+        <div class="conduit-materials-list">
+          <span class="material-chip">Battery (E-Waste)</span>
+        </div>
+        <div class="conduit-session-tally">
+          <span class="tally-label">Session Count</span>
+          <span class="tally-count" id="streamCountHaz">0</span>
+        </div>
+      </article>
+
+      <!-- CONDUIT IV: NON-BIODEGRADABLE -->
+      <article class="conduit-column conduit-non">
+        <div class="conduit-top-line">
+          <span class="conduit-roman">STREAM IV</span>
+          <span class="conduit-dot" aria-hidden="true"></span>
+        </div>
+        <h3 class="conduit-title">Non-Biodegradable</h3>
+        <span class="conduit-bin-badge">Landfill / General Waste</span>
+        <p class="conduit-desc">
+          Composite multi-material consumer products, mixed footwear, non-salvageable textiles, and non-recyclable solid residues destined for municipal general waste containment.
+        </p>
+        <div class="conduit-materials-list">
+          <span class="material-chip">Clothes</span>
+          <span class="material-chip">Shoes</span>
+          <span class="material-chip">General Trash</span>
+        </div>
+        <div class="conduit-session-tally">
+          <span class="tally-label">Session Count</span>
+          <span class="tally-count" id="streamCountNon">0</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       04. THE 12-MATERIAL SPECIMEN LIBRARY
+       ========================================================================= -->
+  <section class="specimens-library-section" id="specimens-library" aria-label="Physical material specimen library">
+    <div class="section-badge-bar">
+      <span class="badge-num">SECTION 03</span>
+      <span class="badge-title">THE 12 PHYSICAL MATERIAL SPECIMENS</span>
+      <span class="badge-status">DISCRETE TAXONOMY</span>
+    </div>
+
+    <div class="library-header-spread">
+      <div class="library-title-wrap">
+        <h2 class="library-heading">Materiality, not abstraction.</h2>
+        <p class="library-sub">
+          Cullet does not guess generic categories directly; it identifies tangible physical substances, each mapped directly to an operational recovery protocol.
+        </p>
+      </div>
+      <div class="library-stats-note">
+        <span class="stats-big">12</span>
+        <span class="stats-label">Trained Visual Classes &middot; Balanced Split</span>
+      </div>
+    </div>
+
+    <div class="specimen-card-grid">
+      
+      <!-- 01 Battery -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-01</span>
+          <span class="box-cat-tag tag-haz">Hazardous</span>
+        </div>
+        <h4 class="box-title">Battery</h4>
+        <p class="box-desc">Alkaline, lithium, or button cells. High fire risk in collection compactors.</p>
+        <span class="box-bin-label">&rarr; Hazardous Drop-off</span>
+      </div>
+
+      <!-- 02 Biological -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-02</span>
+          <span class="box-cat-tag tag-bio">Biodegradable</span>
+        </div>
+        <h4 class="box-title">Biological</h4>
+        <p class="box-desc">Food scraps, peels, garden clippings. Direct microbial compost intake.</p>
+        <span class="box-bin-label">&rarr; Compost / Wet Waste</span>
+      </div>
+
+      <!-- 03 Brown Glass -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-03</span>
+          <span class="box-cat-tag tag-rec">Recyclable</span>
+        </div>
+        <h4 class="box-title">Brown Glass</h4>
+        <p class="box-desc">Amber beverage bottles; preserves light-sensitive cullet streams.</p>
+        <span class="box-bin-label">&rarr; Dry / Recyclable</span>
+      </div>
+
+      <!-- 04 Cardboard -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-04</span>
+          <span class="box-cat-tag tag-bio">Biodegradable</span>
+        </div>
+        <h4 class="box-title">Cardboard</h4>
+        <p class="box-desc">Corrugated cellulose shipping boxes. Must remain dry and ungreased.</p>
+        <span class="box-bin-label">&rarr; Compost or Paper Pulp</span>
+      </div>
+
+      <!-- 05 Clothes -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-05</span>
+          <span class="box-cat-tag tag-non">Non-Biodegradable</span>
+        </div>
+        <h4 class="box-title">Clothes</h4>
+        <p class="box-desc">Woven synthetic or mixed fabrics. Prioritize donation if wearable.</p>
+        <span class="box-bin-label">&rarr; Landfill / Textile Bin</span>
+      </div>
+
+      <!-- 06 Green Glass -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-06</span>
+          <span class="box-cat-tag tag-rec">Recyclable</span>
+        </div>
+        <h4 class="box-title">Green Glass</h4>
+        <p class="box-desc">Emerald and olive glass cullet. 100% infinite cycle remelt capability.</p>
+        <span class="box-bin-label">&rarr; Dry / Recyclable</span>
+      </div>
+
+      <!-- 07 Metal -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-07</span>
+          <span class="box-cat-tag tag-rec">Recyclable</span>
+        </div>
+        <h4 class="box-title">Metal</h4>
+        <p class="box-desc">Aluminium cans, food tins, scrap alloy. Rinse to preserve furnace purity.</p>
+        <span class="box-bin-label">&rarr; Dry / Recyclable</span>
+      </div>
+
+      <!-- 08 Paper -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-08</span>
+          <span class="box-cat-tag tag-bio">Biodegradable</span>
+        </div>
+        <h4 class="box-title">Paper</h4>
+        <p class="box-desc">Newsprint, office sheets, clean flyers. Separate synthetic plastic bindings.</p>
+        <span class="box-bin-label">&rarr; Compost / Wet Waste</span>
+      </div>
+
+      <!-- 09 Plastic -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-09</span>
+          <span class="box-cat-tag tag-rec">Recyclable</span>
+        </div>
+        <h4 class="box-title">Plastic</h4>
+        <p class="box-desc">Rigid PET, HDPE containers. Contamination is primary reason for rejection.</p>
+        <span class="box-bin-label">&rarr; Dry / Recyclable</span>
+      </div>
+
+      <!-- 10 Shoes -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-10</span>
+          <span class="box-cat-tag tag-non">Non-Biodegradable</span>
+        </div>
+        <h4 class="box-title">Shoes</h4>
+        <p class="box-desc">Multi-compound footwear (rubber, foam, adhesives). Inseparable composite.</p>
+        <span class="box-bin-label">&rarr; Landfill / General Waste</span>
+      </div>
+
+      <!-- 11 Trash -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-11</span>
+          <span class="box-cat-tag tag-non">Non-Biodegradable</span>
+        </div>
+        <h4 class="box-title">Trash</h4>
+        <p class="box-desc">Mixed unsegregated refuse, laminated foils, non-compostable packaging.</p>
+        <span class="box-bin-label">&rarr; Landfill / General Waste</span>
+      </div>
+
+      <!-- 12 White Glass -->
+      <div class="specimen-box">
+        <div class="box-top">
+          <span class="box-code">MAT-12</span>
+          <span class="box-cat-tag tag-rec">Recyclable</span>
+        </div>
+        <h4 class="box-title">White Glass</h4>
+        <p class="box-desc">Clear flint glass jars and containers. The purest cullet grade in industry.</p>
+        <span class="box-bin-label">&rarr; Dry / Recyclable</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       05. SESSION FIELD LEDGER & MATERIAL AUDIT (ANALYTICS & HISTORY REIMAGINED)
+       ========================================================================= -->
+  <section class="session-ledger-section" id="session-ledger" aria-label="Session field notes and material archive">
+    <div class="section-badge-bar">
+      <span class="badge-num">SECTION 04</span>
+      <span class="badge-title">SESSION FIELD NOTES &amp; CHRONOLOGICAL SPECIMEN ARCHIVE</span>
+      <span class="badge-status">SESSION AUDIT</span>
+    </div>
+
+    <div class="ledger-header-split">
+      <div>
+        <h2 class="ledger-headline">Material audit &amp; sorting register.</h2>
+        <p class="ledger-sub">
+          A continuous chronological balance of all articles inspected on this station during your active session.
+        </p>
+      </div>
+
+      <button class="tactile-btn btn-ghost btn-sm" id="clearHistoryBtn" aria-label="Clear session history ledger">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        <span>Clear Session Ledger</span>
+      </button>
+    </div>
+
+    <!-- MATERIAL BALANCE SPREAD -->
+    <div class="material-balance-panel">
+      
+      <div class="balance-top-row">
+        <div class="balance-total-card">
+          <span class="bal-label">TOTAL EVALUATED</span>
+          <span class="bal-count" id="dashTotal">0</span>
+          <span class="bal-hint">Items logged on platen</span>
+        </div>
+
+        <div class="balance-tally-cells">
+          
+          <div class="tally-cell cell-bio">
+            <div class="cell-head">
+              <span class="cell-dot dot-bio" aria-hidden="true"></span>
+              <span class="cell-name">Biodegradable</span>
+            </div>
+            <div class="cell-nums">
+              <span class="cell-val" id="dashBio">0</span>
+              <span class="cell-pct" id="dashBioPct">0% of total</span>
+            </div>
+          </div>
+
+          <div class="tally-cell cell-rec">
+            <div class="cell-head">
+              <span class="cell-dot dot-rec" aria-hidden="true"></span>
+              <span class="cell-name">Recyclable</span>
+            </div>
+            <div class="cell-nums">
+              <span class="cell-val" id="dashRec">0</span>
+              <span class="cell-pct" id="dashRecPct">0% of total</span>
+            </div>
+          </div>
+
+          <div class="tally-cell cell-haz">
+            <div class="cell-head">
+              <span class="cell-dot dot-haz" aria-hidden="true"></span>
+              <span class="cell-name">Hazardous</span>
+            </div>
+            <div class="cell-nums">
+              <span class="cell-val" id="dashHaz">0</span>
+              <span class="cell-pct" id="dashHazPct">0% of total</span>
+            </div>
+          </div>
+
+          <div class="tally-cell cell-non">
+            <div class="cell-head">
+              <span class="cell-dot dot-non" aria-hidden="true"></span>
+              <span class="cell-name">Non-Biodegradable</span>
+            </div>
+            <div class="cell-nums">
+              <span class="cell-val" id="dashNon">0</span>
+              <span class="cell-pct" id="dashNonPct">0% of total</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TACTILE SEGMENTED MATERIAL STREAM BAR -->
+      <div class="stream-proportion-bar-wrap">
+        <div class="proportion-header">
+          <span class="prop-title">Stream Ratio Breakdown</span>
+          <span class="prop-caption" id="distroCaption">0 classified items</span>
+        </div>
+        <div class="proportion-track" id="distroBar" aria-label="Visual proportion of sorted waste streams">
+          <div class="prop-segment seg-bio" id="segBio" style="width: 25%;"></div>
+          <div class="prop-segment seg-rec" id="segRec" style="width: 25%;"></div>
+          <div class="prop-segment seg-haz" id="segHaz" style="width: 25%;"></div>
+          <div class="prop-segment seg-non" id="segNon" style="width: 25%;"></div>
+        </div>
+        <div class="proportion-legend">
+          <span class="leg-item"><span class="leg-pip pip-bio"></span> Biodegradable (<span id="legBioPct">0%</span>)</span>
+          <span class="leg-item"><span class="leg-pip pip-rec"></span> Recyclable (<span id="legRecPct">0%</span>)</span>
+          <span class="leg-item"><span class="leg-pip pip-haz"></span> Hazardous (<span id="legHazPct">0%</span>)</span>
+          <span class="leg-item"><span class="leg-pip pip-non"></span> Non-Biodegradable (<span id="legNonPct">0%</span>)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WHAT PASSED THROUGH THE PLATEN: SPECIMEN LOG -->
+    <div class="specimen-archive-wall">
+      <div class="wall-header">
+        <span class="wall-title">Specimen Archival Register</span>
+        <span class="wall-note">Chronological intake cards &middot; Stored locally in session</span>
+      </div>
+
+      <div class="history-list" id="historyList">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- VACANT LOG STATE -->
+      <div class="history-empty" id="historyEmpty">
+        <div class="empty-seal" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <p class="empty-title">Session Ledger Unwritten</p>
+        <p class="empty-desc">No specimens have been mounted on the platen during this session. Mount an item above to write your first entry.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =========================================================================
+       06. HOW CULLET THINKS (THE SYSTEM SPECIFICATION & FIELD MANUAL)
+       ========================================================================= -->
+  <section class="system-manual-section" id="system-manual" aria-label="System architecture and machine learning field manual">
+    <div class="section-badge-bar">
+      <span class="badge-num">SECTION 05</span>
+      <span class="badge-title">SYSTEM ARCHITECTURE &amp; NEURAL VISION MANUAL</span>
+      <span class="badge-status">UNDER THE SURFACE</span>
+    </div>
+
+    <div class="manual-spread-grid">
+      
+      <!-- ESSAY & THEORETICAL PRINCIPLES -->
+      <div class="manual-essay-column">
+        <h2 class="manual-heading">How Cullet discerns physical matter.</h2>
+        
+        <p class="manual-p">
+          Training an artificial visual system for municipal solid waste presents a unique challenge: discarded items are rarely pristine. They arrive crushed, soiled, fractured, and cast in variable ambient lighting.
+        </p>
+
+        <p class="manual-p">
+          Rather than classifying directly into abstract municipal streams (&ldquo;biodegradable&rdquo; or &ldquo;hazardous&rdquo;), Cullet employs a <strong>two-tier hierarchical classification taxonomy</strong>. The neural backbone is trained to discern 12 concrete visual material substances, including corrugated cardboard, high-density polyethylene, and amber glass.
+        </p>
+
+        <p class="manual-p">
+          These granular material probabilities are subsequently aggregated through municipal routing matrices to determine the final disposal stream. This decouples visual feature recognition from local municipal policy, allowing sorting rules to be updated without costly model retraining.
+        </p>
+
+        <div class="manual-quote-card">
+          <span class="quote-mark">&ldquo;</span>
+          <p class="quote-text">
+            By separating material identification from municipal policy, the system mirrors how human recycling facilities operate: first observe what something is made of; only then decide which bin receives it.
+          </p>
+        </div>
+      </div>
+
+      <!-- TECHNICAL FIELD PLATES (SPECS) -->
+      <div class="manual-plates-column">
+        
+        <div class="spec-plate">
+          <div class="plate-top">
+            <span class="plate-code">PLATE I</span>
+            <span class="plate-kicker">NEURAL BACKBONE</span>
+          </div>
+          <h4 class="plate-title">MobileNetV2 Architecture</h4>
+          <p class="plate-detail">Lightweight inverted residual bottlenecks with linear depthwise separable convolutions, pretrained on ImageNet-1k visual features.</p>
+        </div>
+
+        <div class="spec-plate">
+          <div class="plate-top">
+            <span class="plate-code">PLATE II</span>
+            <span class="plate-kicker">TRAINING STRATEGY</span>
+          </div>
+          <h4 class="plate-title">Transfer Learning + Fine Tuning</h4>
+          <p class="plate-detail">Two-phase optimization: frozen backbone head initialization followed by selective unfreezing of the top 30 feature extraction layers on ~10,600 balanced images.</p>
+        </div>
+
+        <div class="spec-plate">
+          <div class="plate-top">
+            <span class="plate-code">PLATE III</span>
+            <span class="plate-kicker">CLASSIFICATION HIERARCHY</span>
+          </div>
+          <h4 class="plate-title">12 Materials &rarr; 4 Municipal Streams</h4>
+          <p class="plate-detail">Two-tier routing table: granular material softmax scores are aggregated into four broad municipal streams (Biodegradable, Recyclable, Hazardous, Non-biodegradable).</p>
+        </div>
+
+        <div class="spec-plate">
+          <div class="plate-top">
+            <span class="plate-code">PLATE IV</span>
+            <span class="plate-kicker">VALIDATION METRIC</span>
+          </div>
+          <h4 class="plate-title">~89.6% Accuracy Benchmark</h4>
+          <p class="plate-detail">Evaluated across a stratified held-out test split of real-world municipal solid waste photography, demonstrating high discrimination on glass, fiber, and metal.</p>
+        </div>
+
+        <div class="spec-plate">
+          <div class="plate-top">
+            <span class="plate-code">PLATE V</span>
+            <span class="plate-kicker">INFERENCE ENGINE</span>
+          </div>
+          <h4 class="plate-title">Local TensorFlow Execution</h4>
+          <p class="plate-detail">Runs directly on local CPU with a preloaded MobileNetV2 model. Sub-150ms single-tensor forward pass with zero external cloud dependencies.</p>
+        </div>
+
+        <div class="spec-plate">
+          <div class="plate-top">
+            <span class="plate-code">PLATE VI</span>
+            <span class="plate-kicker">EDGE CONSTRAINTS</span>
+          </div>
+          <h4 class="plate-title">224 &times; 224 px Tensor Input</h4>
+          <p class="plate-detail">Standardized bicubic resampling with MobileNetV2 normalizations ([-1, 1] range) and client-side offscreen canvas thumbnail generation for local auditing.</p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- =========================================================================
+     07. ARCHIVAL COLOPHON & FOOTER
+     ========================================================================= -->
+<footer class="colophon-footer" role="contentinfo">
+  <div class="colophon-inner">
+    <div class="colophon-block brand-colophon">
+      <div class="colophon-logo">CULLET.</div>
+      <p class="colophon-desc">
+        A tactile optical inspection assistant &amp; specimen cataloguer for municipal solid waste management.
+      </p>
+    </div>
+
+    <div class="colophon-block">
+      <h5 class="colophon-heading">Municipal Streams</h5>
+      <ul class="colophon-links">
+        <li>Stream I: Biodegradable (Compost)</li>
+        <li>Stream II: Recyclable (Dry Cullet)</li>
+        <li>Stream III: Hazardous (Drop-off)</li>
+        <li>Stream IV: Non-Biodegradable (Landfill)</li>
+      </ul>
+    </div>
+
+    <div class="colophon-block">
+      <h5 class="colophon-heading">Ethical Engineering</h5>
+      <p class="colophon-subtext">
+        Executed entirely on your local machine. No images or classification telemetry leave your environment. Built for municipal waste study &amp; circular economy research.
+      </p>
+    </div>
+  </div>
+  <div class="colophon-bottom-rule">
+    <span>CULLET &middot; PRESERVATION OF MATERIAL TRUTH</span>
+    <span>MODERN TECHNOLOGIES IN SOLID WASTE MANAGEMENT</span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}?v=2.2"></script>
+</body>
+</html>
